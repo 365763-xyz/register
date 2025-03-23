@@ -26,7 +26,13 @@ jobs:
                 type=$(echo "$record" | jq -r '.type')
                 name=$(echo "$record" | jq -r '.name')
                 content=$(echo "$record" | jq -r '.content')
-                proxied=$(echo "$record" | jq -r '.proxied // true')
+                
+                # Set proxied to false for TXT records, use specified value for others
+                if [ "$type" = "TXT" ]; then
+                  proxied=false
+                else
+                  proxied=$(echo "$record" | jq -r '.proxied // true')
+                fi
                 
                 echo "Creating DNS record: $name ($type)"
                 
