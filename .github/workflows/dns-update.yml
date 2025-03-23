@@ -13,33 +13,28 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Read domain files
-        id: domains
-        uses: andstor/file-reader-action@v1
-        with:
-          path: domains/
-
-      - name: Update DNS Records
-        uses: cloudflare/wrangler-action@2.0.0
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: |
-            for file in domains/*.json; do
-              records=$(cat $file | jq -c '.records[]')
-              while IFS= read -r record; do
-                type=$(echo $record | jq -r '.type')
-                name=$(echo $record | jq -r '.name')
-                content=$(echo $record | jq -r '.content')
-                proxied=$(echo $record | jq -r '.proxied // true')
+      - name: Process DNS Records
+        run: |
+          for file in domains/*.json; do
+            if [ -f "$file" ]; then
+              records=$(jq -c '.records[]' "$file")
+              echo "$records" | while IFS= read -r record; do
+                type=$(echo "$record" | jq -r '.type')
+                name=$(echo "$record" | jq -r '.name')
+                content=$(echo "$record" | jq -r '.content')
+                proxied=$(echo "$record" | jq -r '.proxied // true')
                 
-                wrangler dns-record put \
-                  --type=$type \
-                  --name=$name \
-                  --content=$content \
-                  --proxied=$proxied \
-                  --zone-id=$CLOUDFLARE_ZONE_ID
-              done <<< "$records"
-            done
+                echo "Processing record: $name ($type)"
+                
+                curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records" \
+                  -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+                  -H "Content-Type: application/json" \
+                  --data "{
+                    \"type\": \"$type\",
+                    \"name\": \"$name\",
+                    \"content\": \"$content\",
+                    \"proxied\": $proxied
+                  }"
+              done
+            fi
+          done
