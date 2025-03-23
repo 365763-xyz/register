@@ -1,0 +1,8 @@
+{
+  "type": "TXT",
+  "name": "_discord.max",
+  "content": "dh=88cf4103bfcdff6d170bca6f59c10d0c60fc3951",
+  "ttl": 3600,
+  "priority": null,
+  "proxied": false
+}
