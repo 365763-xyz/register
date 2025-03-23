@@ -1,0 +1,35 @@
+name: Update DNS Records
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "domains/*.json"  # Trigger on any .json file in the 'domains' folder
+
+jobs:
+  update-dns:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Process Subdomain Requests and Update DNS
+        run: |
+          for file in domains/*.json; do
+            echo "Processing $file"
+            subdomain=$(basename "$file" .json)
+            ip_address=$(jq -r '.content' "$file")  # Extract IP address from JSON
+            
+            # Create DNS record in Cloudflare using API
+            curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/dns_records" \
+              -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data '{
+                "type": "A",
+                "name": "'"$subdomain.yourdomain.com"'",
+                "content": "'"$ip_address"'",
+                "ttl": 3600,
+                "proxied": false
+              }'
+          done
