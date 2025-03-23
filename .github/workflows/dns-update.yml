@@ -15,7 +15,7 @@ jobs:
 
       - name: Read domain files
         id: domains
-        uses: javier-varez/read-json-action@v1
+        uses: andstor/file-reader-action@v1
         with:
           path: domains/
 
@@ -27,16 +27,19 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: |
-            for record in $(echo '${{ steps.domains.outputs.data }}' | jq -c '.records[]'); do
-              type=$(echo $record | jq -r '.type')
-              name=$(echo $record | jq -r '.name')
-              content=$(echo $record | jq -r '.content')
-              proxied=$(echo $record | jq -r '.proxied // true')
-              
-              wrangler dns-record put \
-                --type=$type \
-                --name=$name \
-                --content=$content \
-                --proxied=$proxied \
-                --zone-id=$CLOUDFLARE_ZONE_ID
+            for file in domains/*.json; do
+              records=$(cat $file | jq -c '.records[]')
+              while IFS= read -r record; do
+                type=$(echo $record | jq -r '.type')
+                name=$(echo $record | jq -r '.name')
+                content=$(echo $record | jq -r '.content')
+                proxied=$(echo $record | jq -r '.proxied // true')
+                
+                wrangler dns-record put \
+                  --type=$type \
+                  --name=$name \
+                  --content=$content \
+                  --proxied=$proxied \
+                  --zone-id=$CLOUDFLARE_ZONE_ID
+              done <<< "$records"
             done
