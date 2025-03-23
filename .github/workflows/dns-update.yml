@@ -20,6 +20,7 @@ jobs:
         run: |
           for file in domains/*.json; do
             if [ -f "$file" ]; then
+              echo "Processing file: $file"
               records=$(jq -c '.records[]' "$file")
               echo "$records" | while IFS= read -r record; do
                 type=$(echo "$record" | jq -r '.type')
@@ -27,7 +28,9 @@ jobs:
                 content=$(echo "$record" | jq -r '.content')
                 proxied=$(echo "$record" | jq -r '.proxied // true')
                 
-                curl -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records" \
+                echo "Creating DNS record: $name ($type)"
+                
+                response=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records" \
                   -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
                   -H "Content-Type: application/json" \
                   --data "{
@@ -35,7 +38,17 @@ jobs:
                     \"name\": \"$name\",
                     \"content\": \"$content\",
                     \"proxied\": $proxied
-                  }"
+                  }")
+                
+                echo "API Response: $response"
+                
+                if echo "$response" | jq -e '.success' > /dev/null; then
+                  echo "Successfully created DNS record"
+                else
+                  echo "Failed to create DNS record"
+                  echo "$response" | jq '.errors'
+                  exit 1
+                fi
               done
             fi
           done
