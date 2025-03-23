@@ -27,9 +27,9 @@ jobs:
                 name=$(echo "$record" | jq -r '.name')
                 content=$(echo "$record" | jq -r '.content')
                 
-                # Set proxied to false for TXT records, use specified value for others
+                # Force proxied to false for TXT records
                 if [ "$type" = "TXT" ]; then
-                  proxied=false
+                  proxied="false"
                 else
                   proxied=$(echo "$record" | jq -r '.proxied // true')
                 fi
@@ -46,13 +46,11 @@ jobs:
                     \"proxied\": $proxied
                   }")
                 
-                echo "API Response: $response"
-                
                 if echo "$response" | jq -e '.success' > /dev/null; then
-                  echo "Successfully created DNS record"
+                  echo "✅ Created DNS record: $name ($type)"
                 else
-                  echo "Failed to create DNS record"
-                  echo "$response" | jq '.errors'
+                  error_msg=$(echo "$response" | jq -r '.errors[0].message')
+                  echo "❌ Failed to create DNS record: $error_msg"
                   exit 1
                 fi
               done
