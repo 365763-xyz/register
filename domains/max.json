@@ -1,0 +1,10 @@
+{
+   "records": [
+     {
+       "type": "CNAME",
+       "name": "max",
+       "content": "http://santaros.lt",
+       "proxied": "true"
+     }
+   ]
+ }
