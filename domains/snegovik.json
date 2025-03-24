@@ -1,0 +1,10 @@
+{
+   "records": [
+     {
+       "type": "CNAME",
+       "name": "snegovik",
+       "content": "trinket.io/library/trinkets/285809940889"
+       "proxied": "true"
+     }
+   ]
+ }
