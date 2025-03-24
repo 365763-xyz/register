@@ -1,9 +1,9 @@
 {
    "records": [
      {
-       "type": "CNAME",
+       "type": "A",
        "name": "max",
-       "content": "skelbiu.lt",
+       "content": "172.67.137.253",
        "proxied": "true"
      }
    ]
