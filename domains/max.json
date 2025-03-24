@@ -3,7 +3,7 @@
      {
        "type": "CNAME",
        "name": "max",
-       "content": "http://santaros.lt",
+       "content": "santaros.lt",
        "proxied": "true"
      }
    ]
