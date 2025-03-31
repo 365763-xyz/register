@@ -1,0 +1,10 @@
+{
+   "records": [
+     {
+       "type": "CNAME",
+       "name": "testing",
+       "content": "porto-projecto.onrender.com",
+       "proxied": "true"
+     }
+   ]
+ }
